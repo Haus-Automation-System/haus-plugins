@@ -1,0 +1,15 @@
+metadata:
+  name: hass
+  version: 0.1.0
+  icon: "smart-home"
+  display-name: Home Assistant
+
+run:
+  module: hass
+  entrypoint: HassPlugin
+  dependencies:
+    hass-websocket-client:
+      mode: pypi
+      package: hass-websocket-client
+      version: "^0.1.0"
+      extras: []

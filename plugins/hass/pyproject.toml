@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "hass"
+version = "0.1.0"
+description = "HASS plugin for HAUS"
+authors = ["iTecAI <matteovh@gmail.com>"]
+license = "GPL v3"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+hass-websocket-client = "^0.1.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
