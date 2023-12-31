@@ -31,5 +31,30 @@ run:
       mode: pypi
       package: package-name
       version: package version      # Optional (uses latest)
-      extras: [list, of, extras]    # Optional
+      extras: [list, of, extras]    # Optional ([])
+
+settings:
+  field_id:
+    type: string
+    name: Friendly Name
+    icon: tabler-icon-name          # Optional (no icon)
+    default: "default value"        # Optional (empty)
+    placeholder: "example text"     # Optional (empty)
+    required: false                 # Optional (false)
+  field_id:
+    type: number
+    name: Friendly Name
+    icon: tabler-icon-name          # Optional (no icon)
+    default: 0                      # Optional (0)
+    placeholder: "example text"     # Optional (empty)
+    required: false                 # Optional (false)
+    min: null                       # Optional (null)
+    max: null                       # Optional (null)
+  field_id:
+    type: switch
+    name: Friendly Name
+    icon: tabler-icon-name          # Optional (no icon)
+    default: false                  # Optional (false)
+    placeholder: "example text"     # Optional (empty)
+    required: false                 # Optional (false)
 ```

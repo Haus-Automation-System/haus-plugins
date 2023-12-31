@@ -9,6 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.12"
 hass-websocket-client = "^0.1.0"
+pydantic = "^2.5.3"
 
 
 [build-system]

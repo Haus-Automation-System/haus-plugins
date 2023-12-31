@@ -13,3 +13,18 @@ run:
       package: hass-websocket-client
       version: "^0.1.0"
       extras: []
+
+settings:
+  hass_server:
+    type: string
+    name: HASS Address
+    icon: "smart-home"
+    placeholder: "wss://hass.example.com"
+    required: true
+
+  hass_token:
+    type: string
+    name: Access Token
+    icon: "link"
+    placeholder: "hass-access-token"
+    required: true
