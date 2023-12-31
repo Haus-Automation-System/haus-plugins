@@ -1,5 +1,5 @@
 from typing import Any, Optional
-from .haus_utils import Plugin, PluginConfig
+from haus_utils import Plugin, PluginConfig
 from pydantic import BaseModel
 
 
