@@ -117,6 +117,15 @@ class EntityTransformer:
                         value=parsed_value,
                     )
                     continue
+                case "bool":
+                    props[pid] = BooleanEntityProperty(
+                        id=pid,
+                        display=DisplayData(
+                            label=key.replace("_", " ").title(), icon="toggle-right"
+                        ),
+                        value=parsed_value,
+                    )
+                    continue
                 case "number":
                     props[pid] = NumberEntityProperty(
                         id=pid,
