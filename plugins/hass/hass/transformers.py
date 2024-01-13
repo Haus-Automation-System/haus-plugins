@@ -1,5 +1,5 @@
 from typing import Any
-from hass_websocket_client.models import HassEntity
+from hass_websocket_client.models import HassEntity, HassService, HassServiceField, HassServiceTarget
 from haus_utils import *
 
 
@@ -62,7 +62,8 @@ class EntityTransformer:
             type=etype,
             display=DisplayData(
                 label=entity["attributes"].get(
-                    "friendly_name", entity["entity_id"].replace("_", " ").title()
+                    "friendly_name", entity["entity_id"].replace(
+                        "_", " ").title()
                 ),
                 icon=cls.ICON_MAP.get(etype.lower(), "hexagon"),
             ),
@@ -176,7 +177,8 @@ class EntityTransformer:
                                 columns=[
                                     TablePropertyColumn(
                                         key=k,
-                                        value_type=EntityTransformer.parse_value(v)[1],
+                                        value_type=EntityTransformer.parse_value(v)[
+                                            1],
                                     )
                                     for k, v in parsed_value[0].items()
                                 ],
@@ -203,3 +205,227 @@ class EntityTransformer:
                         value=str(parsed_value),
                     )
         return props
+
+
+class ActionTransformer:
+    ICON_MAP = {
+        "light.turn_on": "bulb",
+        "light.turn_off": "bulb-off",
+        "light.toggle": "bulb",
+        "notify": "bell",
+        "scene": "trees",
+        "zone": "map",
+        "tts": "ear"
+    }
+
+    @classmethod
+    def transform(cls, domain: str, service: str, data: HassService) -> EntityAction:
+        return EntityAction(
+            id=domain + "." + service,
+            plugin="hass",
+            display=DisplayData(
+                label=data["name"] if len(data["name"]) > 0 else " ".join(
+                    [i.capitalize() for i in service.split("_")]),
+                sub_label=data["description"] if "description" in data.keys() and len(
+                    data["description"]) > 0 else None,
+                icon=ActionTransformer.ICON_MAP.get(
+                    domain + "." + service, ActionTransformer.ICON_MAP.get(domain, "settings-2"))
+            ),
+            target_types=[domain] if data.get("target") else [],
+            fields={k: v for k, v in {k: ActionTransformer.transform_field(
+                k, v) for k, v in data["fields"].items()}.items() if v}
+        )
+
+    @staticmethod
+    def transform_field(key: str, field: HassServiceField) -> ENTITY_ACTION_FIELDS:
+        selector_type = list(field.get("selector").keys())[0]
+        selector_data = field["selector"][selector_type]
+        if key == "date" and selector_type == "text":
+            return DateActionField(
+                key=key,
+                display=DisplayData(label=field.get("name", " ".join(
+                    [i.capitalize() for i in key.split("_")])), sub_label=field.get("description"), icon="calendar"),
+                advanced=field.get("advanced", False),
+                default=field.get("default"),
+                required=field.get("required", False),
+                min=None,
+                max=None,
+                example=field.get("example")
+            )
+
+        if key == "datetime" and selector_type == "text":
+            return DateTimeActionField(
+                key=key,
+                display=DisplayData(label=field.get("name", " ".join(
+                    [i.capitalize() for i in key.split("_")])), sub_label=field.get("description"), icon="calendar-clock"),
+                advanced=field.get("advanced", False),
+                default=field.get("default"),
+                required=field.get("required", False),
+                min=None,
+                max=None,
+                example=field.get("example")
+            )
+
+        if key == "rgb_color" and selector_type == "object":
+            return ColorActionField(
+                key=key,
+                display=DisplayData(label=field.get("name", " ".join(
+                    [i.capitalize() for i in key.split("_")])), sub_label=field.get("description"), icon="color-swatch"),
+                advanced=field.get("advanced", False),
+                default=field.get("default"),
+                required=field.get("required", False),
+                example=field.get("example")
+            )
+
+        match selector_type:
+            case "text":
+                return StringActionField(
+                    key=key,
+                    display=DisplayData(label=field.get("name", " ".join(
+                        [i.capitalize() for i in key.split("_")])), sub_label=field.get("description"), icon="cursor-text"),
+                    advanced=field.get("advanced", False),
+                    default=field.get("default"),
+                    required=field.get("required", False),
+                    example=field.get("example")
+                )
+
+            case "select":
+                return SelectionActionField(
+                    key=key,
+                    display=DisplayData(label=field.get("name", " ".join(
+                        [i.capitalize() for i in key.split("_")])), sub_label=field.get("description"), icon="select"),
+                    advanced=field.get("advanced", False),
+                    default=field.get("default"),
+                    required=field.get("required", False),
+                    options=[SelectionActionOptions(value=i, label=" ".join(
+                        [j.capitalize() for j in i.split("_")])) if type(i) != dict else SelectionActionOptions(value=i["value"], label=i["label"]) for i in selector_data.get("options", [])],
+                    multi=False,
+                    example=field.get("example")
+                )
+
+            case "time":
+                return TimeActionField(
+                    key=key,
+                    display=DisplayData(label=field.get("name", " ".join(
+                        [i.capitalize() for i in key.split("_")])), sub_label=field.get("description"), icon="clock"),
+                    advanced=field.get("advanced", False),
+                    default=field.get("default"),
+                    required=field.get("required", False),
+                    min=None,
+                    max=None,
+                    example=field.get("example")
+                )
+
+            case "object":
+                return JSONActionField(
+                    key=key,
+                    display=DisplayData(label=field.get("name", " ".join(
+                        [i.capitalize() for i in key.split("_")])), sub_label=field.get("description"), icon="json"),
+                    advanced=field.get("advanced", False),
+                    default=field.get("default"),
+                    required=field.get("required", False),
+                    example=field.get("example")
+                )
+
+            case "number":
+                return NumberActionField(
+                    key=key,
+                    display=DisplayData(label=field.get("name", " ".join(
+                        [i.capitalize() for i in key.split("_")])), sub_label=field.get("description"), icon="number"),
+                    advanced=field.get("advanced", False),
+                    default=field.get("default"),
+                    required=field.get("required", False),
+                    min=selector_data.get("min"),
+                    max=selector_data.get("max"),
+                    decimals="step" in selector_data.keys(),
+                    unit=selector_data.get("unit_of_measurement"),
+                    example=field.get("example")
+                )
+
+            case "boolean":
+                return BooleanActionField(
+                    key=key,
+                    display=DisplayData(label=field.get("name", " ".join(
+                        [i.capitalize() for i in key.split("_")])), sub_label=field.get("description"), icon="toggle-left"),
+                    advanced=field.get("advanced", False),
+                    default=field.get("default"),
+                    required=field.get("required", False),
+                    example=field.get("example")
+                )
+
+            case "entity":
+                pfx = ""
+                if selector_data:
+                    if "domain" in selector_data.keys():
+                        pfx += selector_data["domain"] + "."
+
+                    if "service" in selector_data.keys():
+                        pfx += selector_data["service"] + "."
+
+                return EntitySelectorActionField(key=key,
+                                                 display=DisplayData(label=field.get("name", " ".join(
+                                                     [i.capitalize() for i in key.split("_")])), sub_label=field.get("description"), icon="category"),
+                                                 advanced=field.get(
+                                                     "advanced", False),
+                                                 default=field.get("default"),
+                                                 required=field.get(
+                                                     "required", False),
+                                                 prefix=[pfx.strip(".")] if len(
+                                                     pfx) > 0 else [],
+                                                 example=field.get("example")
+                                                 )
+
+            case "conversation_agent":
+                return EntitySelectorActionField(key=key,
+                                                 display=DisplayData(label=field.get("name", " ".join(
+                                                     [i.capitalize() for i in key.split("_")])), sub_label=field.get("description"), icon="category"),
+                                                 advanced=field.get(
+                                                     "advanced", False),
+                                                 default=field.get("default"),
+                                                 required=field.get(
+                                                     "required", False),
+                                                 prefix=["conversation_agent"],
+                                                 example=field.get("example")
+                                                 )
+
+            case "color_temp":
+                return NumberActionField(
+                    key=key,
+                    display=DisplayData(label=field.get("name", " ".join(
+                        [i.capitalize() for i in key.split("_")])), sub_label=field.get("description"), icon="color-swatch"),
+                    advanced=field.get("advanced", False),
+                    default=field.get("default"),
+                    required=field.get("required", False),
+                    min=selector_data.get(
+                        "min_mireds") if selector_data else None,
+                    max=selector_data.get(
+                        "max_mireds") if selector_data else None,
+                    decimals=False,
+                    unit=None,
+                    example=field.get("example")
+                )
+
+            case "color_rgb":
+                return ColorActionField(
+                    key=key,
+                    display=DisplayData(label=field.get("name", " ".join(
+                        [i.capitalize() for i in key.split("_")])), sub_label=field.get("description"), icon="color-swatch"),
+                    advanced=field.get("advanced", False),
+                    default=field.get("default"),
+                    required=field.get("required", False),
+                    example=field.get("example")
+                )
+
+            case "constant":
+                return None
+
+            case _:
+                return StringActionField(
+                    key=key,
+                    display=DisplayData(label=field.get("name", " ".join(
+                        [i.capitalize() for i in key.split("_")])), sub_label=field.get("description"), icon="cursor-text"),
+                    advanced=field.get("advanced", False),
+                    default=field.get("default"),
+                    required=field.get("required", False),
+                    example=field.get("example")
+                )

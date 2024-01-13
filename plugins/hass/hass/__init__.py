@@ -1,8 +1,8 @@
 from typing import Any, Optional, Self
-from haus_utils import Plugin, PluginConfig, PluginEntity
+from haus_utils import Plugin, PluginConfig, PluginEntity, EntityAction
 from pydantic import BaseModel
 from hass_websocket_client import HassWS
-from .transformers import EntityTransformer
+from .transformers import EntityTransformer, ActionTransformer
 
 
 class HassPluginSettings(BaseModel):
@@ -36,3 +36,17 @@ class HassPlugin(Plugin):
             for i in result.data
             if ids == None or i["entity_id"] in ids
         ]
+
+    async def get_actions(self, ids: list[str] = None) -> list[EntityAction]:
+        result = await self.client.fetch_services()
+        if not result.success:
+            return []
+
+        output = []
+        for domain, services in result.data.items():
+            for service, data in services.items():
+                if ids == None or (domain + "." + service) in ids:
+                    output.append(ActionTransformer.transform(
+                        domain, service, data))
+
+        return output
