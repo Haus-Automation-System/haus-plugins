@@ -231,7 +231,7 @@ class ActionTransformer:
                 icon=ActionTransformer.ICON_MAP.get(
                     domain + "." + service, ActionTransformer.ICON_MAP.get(domain, "settings-2"))
             ),
-            target_types=[domain] if data.get("target") else [],
+            target_types=[domain] if data.get("target") else None,
             fields={k: v for k, v in {k: ActionTransformer.transform_field(
                 k, v) for k, v in data["fields"].items()}.items() if v}
         )
