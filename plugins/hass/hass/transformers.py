@@ -227,7 +227,8 @@ class ActionTransformer:
         "notify": "bell",
         "scene": "trees",
         "zone": "map",
-        "tts": "ear"
+        "tts": "ear",
+        "persistent_notification": "bell"
     }
 
     @classmethod
@@ -235,6 +236,7 @@ class ActionTransformer:
         return EntityAction(
             id=domain + "." + service,
             plugin="hass",
+            category=domain,
             display=DisplayData(
                 label=data["name"] if len(data["name"]) > 0 else " ".join(
                     [i.capitalize() for i in service.split("_")]),
