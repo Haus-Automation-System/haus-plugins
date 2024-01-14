@@ -50,3 +50,11 @@ class HassPlugin(Plugin):
                         domain, service, data))
 
         return output
+
+    async def call_action(self, action_id: str, target: Optional[str], fields: dict[str, Any]):
+        await self.client.call_service(
+            action_id.split(".")[0],
+            action_id.split(".")[1],
+            target={"entity_id": target} if target else {},
+            data={k: v for k, v in fields.items() if v != None}
+        )
