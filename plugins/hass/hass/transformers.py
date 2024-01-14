@@ -165,6 +165,18 @@ class EntityTransformer:
                         )
                         continue
 
+                    if "rgb" in pid and len(parsed_value) == 3 and all([type(i) == int for i in parsed_value]):
+                        props[pid] = ColorEntityProperty(
+                            id=pid,
+                            display=DisplayData(
+                                label=key.replace("_", " ").title(), icon="list"
+                            ),
+                            value=f"rgb({', '.join([str(i)
+                                                    for i in parsed_value])})",
+                            hasAlpha=False
+                        )
+                        continue
+
                     if type(parsed_value[0]) == dict:
                         try:
                             props[pid] = TableEntityProperty(
