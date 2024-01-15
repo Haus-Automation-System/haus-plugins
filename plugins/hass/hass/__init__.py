@@ -1,7 +1,11 @@
+from collections.abc import AsyncGenerator
+from secrets import token_urlsafe
 from typing import Any, Optional, Self
-from haus_utils import Plugin, PluginConfig, PluginEntity, EntityAction
+from haus_utils import Plugin, PluginConfig, PluginEntity, EntityAction, PluginEvent
 from pydantic import BaseModel
 from hass_websocket_client import HassWS
+from hass_websocket_client.client import HassEventListener, HassEvent
+
 from .transformers import EntityTransformer, ActionTransformer
 
 
@@ -58,3 +62,15 @@ class HassPlugin(Plugin):
             target={"entity_id": target} if target else {},
             data={k: v for k, v in fields.items() if v != None}
         )
+
+    async def listen_events(self) -> AsyncGenerator[PluginEvent | None, Any]:
+        async with self.client.listen_event() as l:
+            listener: HassEventListener = l
+            async for event in listener:
+                e: HassEvent = event
+                yield PluginEvent(
+                    id=token_urlsafe(nbytes=16),
+                    plugin="hass",
+                    types=[e["event_type"]],
+                    data=e["data"]
+                )
