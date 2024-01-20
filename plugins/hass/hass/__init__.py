@@ -4,7 +4,7 @@ from typing import Any, Optional, Self
 from haus_utils import Plugin, PluginConfig, PluginEntity, EntityAction, PluginEvent
 from pydantic import BaseModel
 from hass_websocket_client import HassWS
-from hass_websocket_client.client import HassEventListener, HassEvent
+from hass_websocket_client.client import HassEventListener, HassEvent, HassEntity
 
 from .transformers import EntityTransformer, ActionTransformer
 
@@ -72,5 +72,9 @@ class HassPlugin(Plugin):
                     id=token_urlsafe(nbytes=16),
                     plugin="hass",
                     types=[e["event_type"]],
-                    data=e["data"]
+                    data=e["data"],
+                    targets=[e["data"]["entity_id"]] if "entity_id" in e["data"].keys() else [
+                    ],
+                    new_state=EntityTransformer.transform(HassEntity(
+                        e["data"]["new_state"])) if "new_state" in e["data"].keys() else None
                 )
