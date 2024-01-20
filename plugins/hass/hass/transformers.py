@@ -1,3 +1,4 @@
+import json
 from typing import Any
 from hass_websocket_client.models import HassEntity, HassService, HassServiceField, HassServiceTarget
 from haus_utils import *
@@ -74,30 +75,36 @@ class EntityTransformer:
     def parse_value(
         value: Any,
     ) -> Union[str, bool, int, float, None, datetime.datetime]:
-        if type(value) == str:
-            if value.lower() in ["off", "false", "no"]:
+        if type(value) == dict:
+            return json.dumps(value), "string"
+
+        if type(value) == list:
+            return value, "list"
+
+        if type(value) != str:
+            value = str(value)
+
+        if value.lower() in ["off", "false", "no"]:
                 return False, "boolean"
-            if value.lower() in ["on", "true", "yes"]:
-                return True, "boolean"
+        if value.lower() in ["on", "true", "yes"]:
+            return True, "boolean"
 
-            try:
-                return int(value), "number"
-            except:
-                pass
+        try:
+            return int(value), "number"
+        except:
+            pass
 
-            try:
-                return float(value), "number"
-            except:
-                pass
+        try:
+            return float(value), "number"
+        except:
+            pass
 
-            try:
-                return datetime.datetime.fromisoformat(value), "datetime"
-            except:
-                pass
+        try:
+            return datetime.datetime.fromisoformat(value), "datetime"
+        except:
+            pass
 
-            return value, "string"
-
-        return value, str(type(value)).split("'")[1]
+        return value, "string"
 
     @staticmethod
     def generic_property_transform(entity: HassEntity) -> dict[str, ENTITY_PROPERTIES]:
