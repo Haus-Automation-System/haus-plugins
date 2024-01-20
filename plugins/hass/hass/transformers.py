@@ -81,6 +81,12 @@ class EntityTransformer:
         if type(value) == list:
             return value, "list"
 
+        if type(value) == int:
+            return value, "number"
+
+        if type(value) == float:
+            return value, "number"
+
         if type(value) != str:
             value = str(value)
 
@@ -88,11 +94,6 @@ class EntityTransformer:
                 return False, "boolean"
         if value.lower() in ["on", "true", "yes"]:
             return True, "boolean"
-
-        try:
-            return int(value), "number"
-        except:
-            pass
 
         try:
             return float(value), "number"
